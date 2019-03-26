@@ -1,5 +1,6 @@
 package com.dummy.myerp.model.bean.comptabilite;
 
+
 import java.math.BigDecimal;
 
 import org.apache.commons.lang3.ObjectUtils;
@@ -21,7 +22,7 @@ public class EcritureComptableTest {
     }
 
     @Test
-    public void isEquilibree() {
+    public void isEquilibreeTest() {
         EcritureComptable vEcriture;
         vEcriture = new EcritureComptable();
 
@@ -40,5 +41,14 @@ public class EcritureComptableTest {
         vEcriture.getListLigneEcriture().add(this.createLigne(2, "1", "2"));
         Assert.assertFalse(vEcriture.toString(), vEcriture.isEquilibree());
     }
-
+    
+    @Test 
+    public void getTotalDebitTest() {
+		// TODO 
+	}
+    
+    @Test 
+    public void getTotalCredit() {
+    	// TODO 
+    }
 }
