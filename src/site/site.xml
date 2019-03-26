@@ -11,13 +11,13 @@
   <bannerLeft>
     <name>${project.name}</name>
     <src>img/logo-app.png</src>
-    <href>${project.url}</href>
+    <href>${this.url}</href>
   </bannerLeft>
 
   <bannerRight>
     <name>${project.organization.name}</name>
     <src>img/logo-client.png</src>
-    <href>${project.organization.url}</href>
+    <href>${this.organization.url}</href>
   </bannerRight>
 
 
