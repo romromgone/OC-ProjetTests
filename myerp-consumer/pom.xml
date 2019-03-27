@@ -48,6 +48,10 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>myerp-model</artifactId>
         </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>myerp-technical</artifactId>
+        </dependency>
 
         <!-- spring-jdbc : commons-exceptions, datasource management -->
         <dependency>

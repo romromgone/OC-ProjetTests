@@ -53,6 +53,10 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>myerp-consumer</artifactId>
         </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>myerp-technical</artifactId>
+        </dependency>
 
         <!-- ===== Spring JDBC/Tx ===== -->
         <!-- spring-tx : transaction, JCA, DAO -->
