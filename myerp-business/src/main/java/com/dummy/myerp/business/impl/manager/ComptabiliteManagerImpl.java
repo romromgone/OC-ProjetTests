@@ -140,7 +140,6 @@ public class ComptabiliteManagerImpl extends AbstractBusinessManager implements 
     }
     
     
-    // TODO à tester
     @Override
     public synchronized void addReference(EcritureComptable pEcritureComptable) throws FunctionalException {       
         String codeJournalComptable = pEcritureComptable.getJournal().getCode();
@@ -171,7 +170,6 @@ public class ComptabiliteManagerImpl extends AbstractBusinessManager implements 
     }
 
     
-    // TODO à tester
     @Override
     public void checkEcritureComptable(EcritureComptable pEcritureComptable) throws FunctionalException {
         this.checkEcritureComptableUnit(pEcritureComptable);

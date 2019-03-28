@@ -16,7 +16,7 @@ import org.apache.commons.lang3.StringUtils;
 /**
  * Bean représentant une Écriture Comptable
  */
-public class EcritureComptable {
+public class EcritureComptable implements Cloneable {
 
     // ==================== Attributs ====================
     /** The Id. */
@@ -135,5 +135,15 @@ public class EcritureComptable {
             .append(StringUtils.join(listLigneEcriture, "\n")).append("\n]")
             .append("}");
         return vStB.toString();
+    }
+    
+    public Object clone() {
+        Object o = null;
+        try {
+            o = super.clone();
+        } catch(CloneNotSupportedException cnse) {
+            cnse.printStackTrace(System.err);
+        }
+        return o;
     }
 }
