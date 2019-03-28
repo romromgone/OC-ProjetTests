@@ -2,11 +2,7 @@ package com.dummy.myerp.business.testIT;
 
 import org.junit.Test;
 
-import com.dummy.myerp.model.bean.comptabilite.CompteComptable;
-
 import static org.junit.Assert.assertNotNull;
-
-import java.util.List;
 
 
 /**
@@ -30,12 +26,5 @@ public class TestInitSpring extends BusinessTestCase {
         SpringRegistry.init();
         assertNotNull(SpringRegistry.getBusinessProxy());
         assertNotNull(SpringRegistry.getTransactionManager());
-    }
-    
-    @Test
-    public void testgetListCompteComptable() {
-    	SpringRegistry.init();
-    	List<CompteComptable> list = SpringRegistry.getBusinessProxy().getComptabiliteManager().getListCompteComptable();
-    	assertNotNull(list);
     }
 }

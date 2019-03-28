@@ -102,8 +102,7 @@ public class ComptabiliteManagerImpl extends AbstractBusinessManager implements 
      * @param pEcritureComptable -
      * @throws FunctionalException Si l'Ecriture comptable ne respecte pas les règles de gestion
      */
-    // TODO tests à compléter
-    protected void checkEcritureComptableUnit(EcritureComptable pEcritureComptable) throws FunctionalException {
+    public void checkEcritureComptableUnit(EcritureComptable pEcritureComptable) throws FunctionalException {
         // ===== Vérification des contraintes unitaires sur les attributs de l'écriture
         Set<ConstraintViolation<EcritureComptable>> vViolations = getConstraintValidator().validate(pEcritureComptable);
         if (!vViolations.isEmpty()) {
@@ -119,38 +118,34 @@ public class ComptabiliteManagerImpl extends AbstractBusinessManager implements 
         }
 
         // ===== RG_Compta_3 : une écriture comptable doit avoir au moins 2 lignes d'écriture (1 au débit, 1 au crédit)
-        int vNbrCredit = 0;
-        int vNbrDebit = 0;
-        for (LigneEcritureComptable vLigneEcritureComptable : pEcritureComptable.getListLigneEcriture()) {
-            if (BigDecimal.ZERO.compareTo(ObjectUtils.defaultIfNull(vLigneEcritureComptable.getCredit(),
-                                                                    BigDecimal.ZERO)) != 0) {
-                vNbrCredit++;
-            }
-            if (BigDecimal.ZERO.compareTo(ObjectUtils.defaultIfNull(vLigneEcritureComptable.getDebit(),
-                                                                    BigDecimal.ZERO)) != 0) {
-                vNbrDebit++;
-            }
-        }
-        // On test le nombre de lignes car si l'écriture à une seule ligne
-        //      avec un montant au débit et un montant au crédit ce n'est pas valable
-        if (pEcritureComptable.getListLigneEcriture().size() < 2
-            || vNbrCredit < 1
-            || vNbrDebit < 1) {
-            throw new FunctionalException(
-                "L'écriture comptable doit avoir au moins deux lignes : une ligne au débit et une ligne au crédit.");
-        }
+        // Inutile déjà validé au dessus avec la vérification des contraintes unitaires
+		/*
+		 * int vNbrCredit = 0; int vNbrDebit = 0; for (LigneEcritureComptable
+		 * vLigneEcritureComptable : pEcritureComptable.getListLigneEcriture()) { if
+		 * (BigDecimal.ZERO.compareTo(ObjectUtils.defaultIfNull(vLigneEcritureComptable.
+		 * getCredit(), BigDecimal.ZERO)) != 0) { vNbrCredit++; } if
+		 * (BigDecimal.ZERO.compareTo(ObjectUtils.defaultIfNull(vLigneEcritureComptable.
+		 * getDebit(), BigDecimal.ZERO)) != 0) { vNbrDebit++; } } // On test le nombre
+		 * de lignes car si l'écriture à une seule ligne // avec un montant au débit et
+		 * un montant au crédit ce n'est pas valable if
+		 * (pEcritureComptable.getListLigneEcriture().size() < 2 || vNbrCredit < 1 ||
+		 * vNbrDebit < 1) { throw new FunctionalException(
+		 * "L'écriture comptable doit avoir au moins deux lignes : une ligne au débit et une ligne au crédit."
+		 * ); }
+		 */
 
         // RG_Compta_5 : Format et contenu de la référence
-        // vérifier que l'année dans la référence correspond bien à la date de l'écriture, idem pour le code journal...       
+        // vérifier que l'année dans la référence correspond bien à la date de l'écriture, idem pour le code journal
+        // les contraintes de format sont déjà validé au dessus également grâce au regex
         if (!pEcritureComptable.getReference().substring(3,7).equals(Integer.toString(pEcritureComptable.getDate().getYear()+1900))) {        
-            throw new FunctionalException("Erreur de format ou de contenu de l'année dans la reference de l'écriture comptable : " + pEcritureComptable.getReference().substring(3,7) + " par rapport à la date : " + Integer.toString(pEcritureComptable.getDate().getYear()+1900));
+            throw new FunctionalException("Erreur de contenu de l'année dans la reference de l'écriture comptable : " + pEcritureComptable.getReference().substring(3,7) + " par rapport à la date : " + Integer.toString(pEcritureComptable.getDate().getYear()+1900));
         }
         if (!pEcritureComptable.getReference().substring(0,2).equals(pEcritureComptable.getJournal().getCode())) {
-            throw new FunctionalException("Erreur de format ou de contenu du code journal dans la reference de l'écriture comptable : " + pEcritureComptable.getReference().substring(0,2) + " par rapport au code : " + pEcritureComptable.getJournal().getCode());
+            throw new FunctionalException("Erreur de contenu du code journal dans la reference de l'écriture comptable : " + pEcritureComptable.getReference().substring(0,2) + " par rapport au code : " + pEcritureComptable.getJournal().getCode());
         }
-        if (pEcritureComptable.getReference().substring(8,13).length() != 5) {
-            throw new FunctionalException("Erreur de format du numéro de séquence dans la reference de l'écriture comptable : " + pEcritureComptable.getReference().substring(8,13));
-        }
+        
+        // RG_Compta_7 : Les montants des lignes d'écritures peuvent comporter 2 chiffres maximum après la virgule.
+        // idem traité avec le ConstraintValidator
     }
 
     /**
@@ -160,7 +155,7 @@ public class ComptabiliteManagerImpl extends AbstractBusinessManager implements 
      * @param pEcritureComptable -
      * @throws FunctionalException Si l'Ecriture comptable ne respecte pas les règles de gestion
      */
-    protected void checkEcritureComptableContext(EcritureComptable pEcritureComptable) throws FunctionalException {
+    public void checkEcritureComptableContext(EcritureComptable pEcritureComptable) throws FunctionalException {
         // ===== RG_Compta_6 : La référence d'une écriture comptable doit être unique
         if (StringUtils.isNoneEmpty(pEcritureComptable.getReference())) {
             try {
