@@ -41,51 +41,59 @@ public class ComptabiliteManagerImpl extends AbstractBusinessManager implements 
         return getDaoProxy().getComptabiliteDao().getListCompteComptable();
     }
 
-
     @Override
     public List<JournalComptable> getListJournalComptable() {
         return getDaoProxy().getComptabiliteDao().getListJournalComptable();
     }
-
-    /**
-     * {@inheritDoc}
-     */
+    
     @Override
     public List<EcritureComptable> getListEcritureComptable() {
         return getDaoProxy().getComptabiliteDao().getListEcritureComptable();
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    // TODO à tester
+      
     @Override
-    public synchronized void addReference(EcritureComptable pEcritureComptable) {
-        // TODO à implémenter
-        // Bien se réferer à la JavaDoc de cette méthode !
-        /* Le principe :
-                1.  Remonter depuis la persitance la dernière valeur de la séquence du journal pour l'année de l'écriture
-                    (table sequence_ecriture_comptable)
-                2.  * S'il n'y a aucun enregistrement pour le journal pour l'année concernée :
-                        1. Utiliser le numéro 1.
-                    * Sinon :
-                        1. Utiliser la dernière valeur + 1
-                3.  Mettre à jour la référence de l'écriture avec la référence calculée (RG_Compta_5)
-                4.  Enregistrer (insert/update) la valeur de la séquence en persitance
-                    (table sequence_ecriture_comptable)
-         */
+    public int getValSequenceJournalComptable(String codeJournalComptable, int anneeEcritureComptable) throws NotFoundException {
+    	return getDaoProxy().getComptabiliteDao().getValSequenceJournalByCodeJournalComptableAndAnnee(codeJournalComptable, anneeEcritureComptable);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    
+    // TODO à tester
+    @Override
+    public synchronized void addReference(EcritureComptable pEcritureComptable) throws FunctionalException {       
+        String codeJournalComptable = pEcritureComptable.getJournal().getCode();
+        List<JournalComptable> listJournalComptables = getListJournalComptable();
+        if (listJournalComptables.stream().noneMatch(journalComptable -> journalComptable.getCode().equals(codeJournalComptable))) {
+        	throw new FunctionalException("Le code journal de l'écriture comptable n'existe pas");
+        }
+        
+        int valSequenceJournal;
+        int anneeEcritureComptable = pEcritureComptable.getDate().getYear()+1900;
+        try {
+            valSequenceJournal = getValSequenceJournalComptable(codeJournalComptable, anneeEcritureComptable) + 1;
+        } catch (NotFoundException e) {
+        	valSequenceJournal = 1;
+        }
+        
+        String valSequenceJournalForReference = Integer.toString(valSequenceJournal);
+        String sequenceTemplate = "00000";
+        valSequenceJournalForReference = sequenceTemplate.substring(0, 5 - valSequenceJournalForReference.length()) + valSequenceJournalForReference;
+        String reference = codeJournalComptable + "-" + anneeEcritureComptable + "/" + valSequenceJournalForReference;
+        pEcritureComptable.setReference(reference);
+        
+        try {
+            updateOrInsertValSequenceJournalComptable(codeJournalComptable, anneeEcritureComptable, valSequenceJournal);
+        } catch (NotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    
     // TODO à tester
     @Override
     public void checkEcritureComptable(EcritureComptable pEcritureComptable) throws FunctionalException {
         this.checkEcritureComptableUnit(pEcritureComptable);
         this.checkEcritureComptableContext(pEcritureComptable);
     }
-
 
     /**
      * Vérifie que l'Ecriture comptable respecte les règles de gestion unitaires,
@@ -132,10 +140,18 @@ public class ComptabiliteManagerImpl extends AbstractBusinessManager implements 
                 "L'écriture comptable doit avoir au moins deux lignes : une ligne au débit et une ligne au crédit.");
         }
 
-        // TODO ===== RG_Compta_5 : Format et contenu de la référence
-        // vérifier que l'année dans la référence correspond bien à la date de l'écriture, idem pour le code journal...
+        // RG_Compta_5 : Format et contenu de la référence
+        // vérifier que l'année dans la référence correspond bien à la date de l'écriture, idem pour le code journal...       
+        if (!pEcritureComptable.getReference().substring(3,7).equals(Integer.toString(pEcritureComptable.getDate().getYear()+1900))) {        
+            throw new FunctionalException("Erreur de format ou de contenu de l'année dans la reference de l'écriture comptable : " + pEcritureComptable.getReference().substring(3,7) + " par rapport à la date : " + Integer.toString(pEcritureComptable.getDate().getYear()+1900));
+        }
+        if (!pEcritureComptable.getReference().substring(0,2).equals(pEcritureComptable.getJournal().getCode())) {
+            throw new FunctionalException("Erreur de format ou de contenu du code journal dans la reference de l'écriture comptable : " + pEcritureComptable.getReference().substring(0,2) + " par rapport au code : " + pEcritureComptable.getJournal().getCode());
+        }
+        if (pEcritureComptable.getReference().substring(8,13).length() != 5) {
+            throw new FunctionalException("Erreur de format du numéro de séquence dans la reference de l'écriture comptable : " + pEcritureComptable.getReference().substring(8,13));
+        }
     }
-
 
     /**
      * Vérifie que l'Ecriture comptable respecte les règles de gestion liées au contexte
@@ -165,9 +181,7 @@ public class ComptabiliteManagerImpl extends AbstractBusinessManager implements 
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    
     @Override
     public void insertEcritureComptable(EcritureComptable pEcritureComptable) throws FunctionalException {
         this.checkEcritureComptable(pEcritureComptable);
@@ -180,10 +194,7 @@ public class ComptabiliteManagerImpl extends AbstractBusinessManager implements 
             getTransactionManager().rollbackMyERP(vTS);
         }
     }
-
-    /**
-     * {@inheritDoc}
-     */
+ 
     @Override
     public void updateEcritureComptable(EcritureComptable pEcritureComptable) throws FunctionalException {
     	this.checkEcritureComptable(pEcritureComptable); // ERREUR : ajout car manquant 
@@ -197,9 +208,22 @@ public class ComptabiliteManagerImpl extends AbstractBusinessManager implements 
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    @Override
+    public void updateOrInsertValSequenceJournalComptable(String codeJournalComptable, int anneeEcritureComptable, int valSequenceJournal) throws NotFoundException {
+    	TransactionStatus vTS = getTransactionManager().beginTransactionMyERP();
+        try {
+        	if (valSequenceJournal > 1) {
+        		getDaoProxy().getComptabiliteDao().updateValSequenceJournalComptable(codeJournalComptable, anneeEcritureComptable, valSequenceJournal);
+        	} else {
+        		getDaoProxy().getComptabiliteDao().insertValSequenceJournalComptable(codeJournalComptable, anneeEcritureComptable, valSequenceJournal);
+        	}     	
+            getTransactionManager().commitMyERP(vTS);
+            vTS = null;
+        } finally {
+            getTransactionManager().rollbackMyERP(vTS);
+        }
+    }
+    
     @Override
     public void deleteEcritureComptable(Integer pId) {
         TransactionStatus vTS = getTransactionManager().beginTransactionMyERP();

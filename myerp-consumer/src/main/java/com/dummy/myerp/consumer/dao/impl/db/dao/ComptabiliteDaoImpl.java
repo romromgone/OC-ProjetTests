@@ -74,6 +74,63 @@ public class ComptabiliteDaoImpl extends AbstractDbConsumer implements Comptabil
         List<JournalComptable> vList = vJdbcTemplate.query(SQLgetListJournalComptable, vRM);
         return vList;
     }
+    
+    /** getValSequenceJournalByCodeJournalAndAnnee */
+    private static String SQLGetValSequenceJournalByCodeJournalAndAnnee;
+    public void setSQLGetValSequenceJournalByCodeJournalAndAnnee(String pSQLGetValSequenceJournalByCodeJournalAndAnnee) {
+    	SQLGetValSequenceJournalByCodeJournalAndAnnee = pSQLGetValSequenceJournalByCodeJournalAndAnnee;
+    }
+    @Override
+    public int getValSequenceJournalByCodeJournalComptableAndAnnee(String codeJournalComptable, int anneeEcritureComptable) throws NotFoundException {
+	    NamedParameterJdbcTemplate vJdbcTemplate = new NamedParameterJdbcTemplate(this.getDataSource(DataSourcesEnum.MYERP));
+	    MapSqlParameterSource vSqlParams = new MapSqlParameterSource();
+	    vSqlParams.addValue("journal_code", codeJournalComptable);
+	    vSqlParams.addValue("annee", anneeEcritureComptable);
+	    int valSequenceJournal;
+	    try {
+	    	valSequenceJournal = vJdbcTemplate.queryForObject(SQLGetValSequenceJournalByCodeJournalAndAnnee, vSqlParams, Integer.class);
+	    } catch (EmptyResultDataAccessException vEx) {
+	        throw new NotFoundException("Séquence non trouvée pour le code journal " + codeJournalComptable + " et pour l'année " + anneeEcritureComptable);
+	    }
+	    return valSequenceJournal;
+    }
+    
+    /** insertValSequenceJournalComptable */
+    private static String SQLInsertValSequenceJournalComptable;
+    public void setSQLInsertValSequenceJournalComptable(String pSQLInsertValSequenceJournalComptable) {
+    	SQLInsertValSequenceJournalComptable = pSQLInsertValSequenceJournalComptable;
+    }
+    @Override
+    public void insertValSequenceJournalComptable(String codeJournalComptable, int anneeEcritureComptable, int valSequenceJournal) {
+    	NamedParameterJdbcTemplate vJdbcTemplate = new NamedParameterJdbcTemplate(this.getDataSource(DataSourcesEnum.MYERP));
+        MapSqlParameterSource vSqlParams = new MapSqlParameterSource();
+        vSqlParams.addValue("journal_code", codeJournalComptable);
+        vSqlParams.addValue("annee", anneeEcritureComptable);
+        vSqlParams.addValue("derniere_valeur", valSequenceJournal);      
+        
+        vJdbcTemplate.update(SQLInsertValSequenceJournalComptable, vSqlParams);    
+    }
+    
+    /** updateValSequenceJournalComptable */
+    private static String SQLUpdateValSequenceJournalComptable;
+    public void setSQLUpdateValSequenceJournalComptable(String pSQLUpdateValSequenceJournalComptable) {
+    	SQLUpdateValSequenceJournalComptable = pSQLUpdateValSequenceJournalComptable;
+    }
+    @Override
+    public void updateValSequenceJournalComptable(String codeJournalComptable, int anneeEcritureComptable,
+    		int valSequenceJournal) throws NotFoundException {
+    	NamedParameterJdbcTemplate vJdbcTemplate = new NamedParameterJdbcTemplate(this.getDataSource(DataSourcesEnum.MYERP));
+        MapSqlParameterSource vSqlParams = new MapSqlParameterSource();
+        vSqlParams.addValue("journal_code", codeJournalComptable);
+        vSqlParams.addValue("annee", anneeEcritureComptable);
+        vSqlParams.addValue("derniere_valeur", valSequenceJournal);      
+        try {
+            vJdbcTemplate.update(SQLUpdateValSequenceJournalComptable, vSqlParams);
+        } catch (EmptyResultDataAccessException vEx) {
+        	throw new NotFoundException("Séquence non trouvée pour le code journal " + codeJournalComptable + " et pour l'année " + anneeEcritureComptable);
+        }
+        
+    }
 
     // ==================== EcritureComptable - GET ====================
 
