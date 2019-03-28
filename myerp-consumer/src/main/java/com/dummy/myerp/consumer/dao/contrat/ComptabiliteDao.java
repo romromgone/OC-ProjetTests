@@ -48,6 +48,12 @@ public interface ComptabiliteDao {
      * @return {@link List}
      */
     List<EcritureComptable> getListEcritureComptable();
+    
+    /**
+     * Renvoie la liste des Écritures Comptables sur une periode donnée
+     * @return {@link List}
+     */
+    List<EcritureComptable> getListEcritureComptableByDate(String dateDebut, String dateFin) throws NotFoundException;
 
     /**
      * Renvoie l'Écriture Comptable d'id {@code pId}.

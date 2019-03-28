@@ -1,12 +1,14 @@
 package com.dummy.myerp.business.impl.manager;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.transaction.TransactionStatus;
 import com.dummy.myerp.business.contrat.manager.ComptabiliteManager;
@@ -15,8 +17,10 @@ import com.dummy.myerp.model.bean.comptabilite.CompteComptable;
 import com.dummy.myerp.model.bean.comptabilite.EcritureComptable;
 import com.dummy.myerp.model.bean.comptabilite.JournalComptable;
 import com.dummy.myerp.model.bean.comptabilite.LigneEcritureComptable;
+import com.dummy.myerp.model.bean.comptabilite.SoldeCompteComptable;
 import com.dummy.myerp.technical.exception.FunctionalException;
 import com.dummy.myerp.technical.exception.NotFoundException;
+import com.dummy.myerp.technical.exception.TechnicalException;
 
 
 /**
@@ -50,12 +54,91 @@ public class ComptabiliteManagerImpl extends AbstractBusinessManager implements 
     public List<EcritureComptable> getListEcritureComptable() {
         return getDaoProxy().getComptabiliteDao().getListEcritureComptable();
     }
+    
+    @Override
+    public List<EcritureComptable> getListEcritureComptableByDate(String dateDebut, String dateFin) throws NotFoundException {
+    	return getDaoProxy().getComptabiliteDao().getListEcritureComptableByDate(dateDebut, dateFin);
+    }
       
     @Override
     public int getValSequenceJournalComptable(String codeJournalComptable, int anneeEcritureComptable) throws NotFoundException {
     	return getDaoProxy().getComptabiliteDao().getValSequenceJournalByCodeJournalComptableAndAnnee(codeJournalComptable, anneeEcritureComptable);
     }
 
+   
+    // ===== RG_Compta_1 
+    @Override
+    public SoldeCompteComptable getSoldeCompteComptable(int numCompteComptable) {      
+        List<EcritureComptable> listeEcrituresComptables = getListEcritureComptable();
+        List<LigneEcritureComptable> listeLignesEcrituresComptables = new ArrayList<LigneEcritureComptable>();
+        
+        // On prépare la somme des débits et des crédits
+        BigDecimal sommeCredit = new BigDecimal("0").setScale(2, RoundingMode.HALF_UP);
+        BigDecimal sommeDebit = new BigDecimal("0").setScale(2, RoundingMode.HALF_UP);
+        
+        // On get toutes les lignes d'écriture dans listeLignesEcrituresComptables
+        for (EcritureComptable ecritureComptable : listeEcrituresComptables) {
+        	listeLignesEcrituresComptables.addAll(ecritureComptable.getListLigneEcriture());
+        }
+        
+        // On fait la somme des débits et des crédits de chaque ligne
+        for (LigneEcritureComptable ligneEcritureComptable : listeLignesEcrituresComptables) {
+            if(ligneEcritureComptable.getCompteComptable().getNumero() == numCompteComptable) {
+                if(ligneEcritureComptable.getCredit() != null) {
+                    sommeCredit = sommeCredit.add(ligneEcritureComptable.getCredit().setScale(2,RoundingMode.HALF_UP));
+                }
+                if(ligneEcritureComptable.getDebit()!= null) {
+                    sommeDebit = sommeDebit.add(ligneEcritureComptable.getDebit().setScale(2,RoundingMode.HALF_UP));
+                }
+            }
+        }
+        // On stocke et retourne les sommes et le compteComptable associé dans un objet
+        // SoldeCompteComptable qui gère le système de solde.
+        SoldeCompteComptable soldeCompteComptable = new SoldeCompteComptable(CompteComptable.getByNumero(getListCompteComptable(), numCompteComptable), sommeCredit, sommeDebit);
+        return soldeCompteComptable;
+    }
+    
+    
+    // ===== RG_Compta_1
+    @Override
+    public SoldeCompteComptable getSoldeCompteComptable(int numCompteComptable, String dateDebut, String dateFin) throws TechnicalException, NotFoundException {     
+        try {
+            LocalDate dateD = LocalDate.parse(dateDebut);
+            LocalDate dateF = LocalDate.parse(dateFin);
+        } catch (Exception e) {
+            throw new TechnicalException("Erreur dans les dates");
+        }
+        
+        // On récupère les lignes
+        List<EcritureComptable> listeEcrituresComptables = getListEcritureComptableByDate(dateDebut, dateFin);
+        ArrayList<LigneEcritureComptable> listeLignesEcrituresComptables = new ArrayList<LigneEcritureComptable>();
+        
+        // On prépare la somme des débits et des crédits
+        BigDecimal sommeCredit = new BigDecimal("0").setScale(2, RoundingMode.HALF_UP);
+        BigDecimal sommeDebit = new BigDecimal("0").setScale(2, RoundingMode.HALF_UP);
+        
+        // On get toutes les lignes d'écriture dans listeDesLignes
+        for (EcritureComptable ecritureComptable : listeEcrituresComptables) {
+        	listeLignesEcrituresComptables.addAll(ecritureComptable.getListLigneEcriture());
+        }
+       
+        // On fait la somme des débits et des crédits de chaque ligne
+        for (LigneEcritureComptable ligneEcritureComptable : listeLignesEcrituresComptables) {
+            if(ligneEcritureComptable.getCompteComptable().getNumero() == numCompteComptable) {
+                if(ligneEcritureComptable.getCredit()!= null) {
+                    sommeCredit = sommeCredit.add(ligneEcritureComptable.getCredit().setScale(2,RoundingMode.HALF_UP));
+                }
+                if(ligneEcritureComptable.getDebit() != null) {
+                    sommeDebit = sommeDebit.add(ligneEcritureComptable.getDebit().setScale(2,RoundingMode.HALF_UP));
+                }
+            }
+        }
+        // On stocke et retourne les sommes et le compteComptable associé dans un objet
+        // SoldeCompteComptable qui gère le système de solde.
+        SoldeCompteComptable soldeCompteComptable = new SoldeCompteComptable(CompteComptable.getByNumero(getListCompteComptable(), numCompteComptable), sommeCredit, sommeDebit);
+        return soldeCompteComptable;
+    }
+    
     
     // TODO à tester
     @Override
@@ -134,7 +217,7 @@ public class ComptabiliteManagerImpl extends AbstractBusinessManager implements 
 		 * ); }
 		 */
 
-        // RG_Compta_5 : Format et contenu de la référence
+        // ===== RG_Compta_5 : Format et contenu de la référence
         // vérifier que l'année dans la référence correspond bien à la date de l'écriture, idem pour le code journal
         // les contraintes de format sont déjà validé au dessus également grâce au regex
         if (!pEcritureComptable.getReference().substring(3,7).equals(Integer.toString(pEcritureComptable.getDate().getYear()+1900))) {        
@@ -144,7 +227,7 @@ public class ComptabiliteManagerImpl extends AbstractBusinessManager implements 
             throw new FunctionalException("Erreur de contenu du code journal dans la reference de l'écriture comptable : " + pEcritureComptable.getReference().substring(0,2) + " par rapport au code : " + pEcritureComptable.getJournal().getCode());
         }
         
-        // RG_Compta_7 : Les montants des lignes d'écritures peuvent comporter 2 chiffres maximum après la virgule.
+        // ===== RG_Compta_7 : Les montants des lignes d'écritures peuvent comporter 2 chiffres maximum après la virgule.
         // idem traité avec le ConstraintValidator
     }
 

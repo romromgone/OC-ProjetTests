@@ -235,6 +235,7 @@ public class ComptabiliteManagerImplTest {
         manager.checkEcritureComptableUnit(vEcritureComptable);
     }
     
+    
     //Teste la non validation de la règle 7 : les montants des lignes d'écritures peuvent comporter 2 chiffres maximum après la virgule
     //Cas 2 : non valide, 3 décimales
     @Test(expected = FunctionalException.class)

@@ -25,6 +25,12 @@
                 SELECT * FROM myerp.ecriture_comptable
             </value>
         </property>
+        <property name="SQLgetListEcritureComptableByDate">
+            <value>
+                SELECT * FROM myerp.ecriture_comptable
+                WHERE date BETWEEN CAST(:dateDebut as DATE) AND CAST(:dateFin as DATE)
+            </value>
+        </property>
         <property name="SQLgetEcritureComptable">
             <value>
                 SELECT * FROM myerp.ecriture_comptable

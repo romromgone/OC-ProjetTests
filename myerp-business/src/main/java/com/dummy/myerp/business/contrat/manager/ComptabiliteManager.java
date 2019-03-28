@@ -5,8 +5,10 @@ import java.util.List;
 import com.dummy.myerp.model.bean.comptabilite.CompteComptable;
 import com.dummy.myerp.model.bean.comptabilite.EcritureComptable;
 import com.dummy.myerp.model.bean.comptabilite.JournalComptable;
+import com.dummy.myerp.model.bean.comptabilite.SoldeCompteComptable;
 import com.dummy.myerp.technical.exception.FunctionalException;
 import com.dummy.myerp.technical.exception.NotFoundException;
+import com.dummy.myerp.technical.exception.TechnicalException;
 
 
 /**
@@ -36,10 +38,33 @@ public interface ComptabiliteManager {
     List<EcritureComptable> getListEcritureComptable();
     
     /**
+     * Renvoie la liste des écritures comptables sur une periode donnée.
+     *
+     * @return {@link List}
+     */
+    List<EcritureComptable> getListEcritureComptableByDate(String dateDebut, String dateFin) throws NotFoundException;
+    
+    /**
      * Renvoie la dernière valeur de la séquence du journal comptable pour une annnée donnée
      */
     int getValSequenceJournalComptable(String codeJournalComptable, int anneeEcritureComptable) throws NotFoundException;
  
+    /**
+     * Calcul et renvoie le solde d'un compte comptable
+     *
+     * @param numCompteComptable
+     */
+    SoldeCompteComptable getSoldeCompteComptable(int numCompteComptable);
+
+    /**
+     * Calcul et renvoie le solde d'un compte comptable en prenant compte d'un intervalle de date.
+     *
+     * @param numCompteComptable
+     * @param dateDebut
+     * @param dateFin
+     */
+    SoldeCompteComptable getSoldeCompteComptable(int numCompteComptable, String dateDebut, String dateFin) throws TechnicalException, NotFoundException;
+    
     /**
      * Ajoute une référence à l'écriture comptable.
      *

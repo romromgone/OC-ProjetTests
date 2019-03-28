@@ -146,6 +146,30 @@ public class ComptabiliteDaoImpl extends AbstractDbConsumer implements Comptabil
         List<EcritureComptable> vList = vJdbcTemplate.query(SQLgetListEcritureComptable, vRM);
         return vList;
     }
+    
+    /** SQLgetListEcritureComptableByDate */
+    private static String SQLgetListEcritureComptableByDate;
+    public void setSQLgetListEcritureComptableByDate(String pSQLgetListEcritureComptableByDate) {
+    	SQLgetListEcritureComptableByDate = pSQLgetListEcritureComptableByDate;
+    }
+    @Override
+    public List<EcritureComptable> getListEcritureComptableByDate(String dateDebut, String dateFin) throws NotFoundException {
+	    NamedParameterJdbcTemplate vJdbcTemplate = new NamedParameterJdbcTemplate(this.getDataSource(DataSourcesEnum.MYERP));
+	    MapSqlParameterSource vSqlParams = new MapSqlParameterSource();
+	    vSqlParams.addValue("dateDebut", dateDebut);
+	    vSqlParams.addValue("dateFin", dateFin);
+	    EcritureComptableRM vRM = new EcritureComptableRM();
+	    List<EcritureComptable> vList;
+	    try {
+	        vList = vJdbcTemplate.query(SQLgetListEcritureComptableByDate, vSqlParams, vRM);
+	    } catch (EmptyResultDataAccessException vEx) {
+	        throw new NotFoundException("L'écriture comptable entre les dates " + dateDebut + " et " + dateFin + " n'a pas été trouvée");
+	    }
+	    if(vList.size() == 0) {
+	        throw new NotFoundException("L'écriture comptable entre les dates " + dateDebut + " et " + dateFin + " n'a pas été trouvée");
+	    }
+	    return vList;
+    }
 
 
     /** SQLgetEcritureComptable */
